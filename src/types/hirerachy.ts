@@ -21,3 +21,9 @@ export type Participant = {
   totalEarnedFromYou?: number;
   totalCommissionsFromYou?: number;
 };
+
+export interface ParticipantCardProps {
+  participant: Participant;
+  onEdit?: () => void;
+  compact?: boolean;
+}

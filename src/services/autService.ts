@@ -22,7 +22,7 @@
 //   return res.json(); // devuelve { token, user }
 // }
 // authService.ts
-export async function login(email: string, password: string) {
+export async function loginService(email: string, password: string) {
   const res = await fetch(
     'https://commission-backend-11px.onrender.com/auth/login',
     {
@@ -39,7 +39,7 @@ export async function login(email: string, password: string) {
   // data debe contener token, userId y level
   return {
     token: data.access_token,
-    userId: data.affiliate.id,
+    userAffiliateId: data.affiliate.id,
     level: data.affiliate.level ?? 1, // default 1 si no viene
   };
 }

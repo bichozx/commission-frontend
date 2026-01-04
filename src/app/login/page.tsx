@@ -62,6 +62,7 @@
 // src/app/login/page.tsx
 'use client';
 
+import { loginService } from '@/services/autService';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -78,46 +79,20 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
-
     try {
-      // Aquí llamarías a tu API real de login
-      // Ejemplo:
-      // const response = await fetch('/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData),
-      // });
+      const data = await loginService(formData.email, formData.password);
+      console.log(data);
 
-      // const data = await response.json();
+      // Mapea correctamente la respuesta del backend
+      const token = data.token;
+      const userAffiliateId = data.userAffiliateId;
+      const level = data.level;
 
-      // Simulación de respuesta exitosa
-      const mockResponse = {
-        token: 'mock-jwt-token-12345',
-        userId: 'e078c59f-6225-4372-8532-92f4f54f0fcf',
-        level: 3,
-        user: {
-          id: 'e078c59f-6225-4372-8532-92f4f54f0fcf',
-          name: 'Eliana Martha',
-          email: formData.email,
-        },
-      };
+      login(token, userAffiliateId, level); // <- ahora todo tiene valor
 
-      // Guardar en el store
-      login(
-        mockResponse.token,
-        mockResponse.userId,
-        mockResponse.level,
-        mockResponse.user
-      );
-
-      // Redirigir al dashboard
-      router.push('/dashboard');
+      router.push('/dashboard'); // Redirige al dashboard
     } catch (err: any) {
-      setError(err.message || 'Error en el login');
-    } finally {
-      setLoading(false);
+      setError(err.response?.data?.message || 'Login failed');
     }
   };
 

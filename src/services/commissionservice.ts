@@ -101,9 +101,27 @@ export async function fetchParticipantById(id: string, token: string) {
   return res.data;
 }
 
-export async function fetchParticipantsByLevel(level: number, token: string) {
-  const res = await axios.get(`${API_URL}/participants/level/${level}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function fetchParticipantsByLevel(
+  userAffiliateId: string,
+  token: string
+) {
+  const res = await axios.get(
+    `${API_URL}/commissions/by-level/${userAffiliateId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  return res.data;
+}
+
+// NUEVO: Endpoint para comisiones por nivel
+export async function fetchCommissionsByLevel(
+  affiliateId: string,
+  token: string
+) {
+  const res = await axios.get(
+    `${API_URL}/commissions/by-level/${affiliateId}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
   return res.data;
 }
