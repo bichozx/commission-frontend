@@ -5,9 +5,12 @@ const API_URL = 'https://commission-backend-11px.onrender.com';
 
 // Función existente
 export async function fetchHierarchy(affiliateId: string, token: string) {
-  const res = await axios.get(`${API_URL}/affiliates/tree/${affiliateId}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await axios.get(
+    `$localhost:3001/affiliates/tree/${affiliateId}`,
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
   console.log('🚀 ~ fetchHierarchy ~ res:', res);
   return res.data;
 }

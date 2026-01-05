@@ -11,3 +11,16 @@ export async function affiliateTree(affiliateId: string, token: string) {
 
   return res.data;
 }
+
+export async function createAffiliate(
+  data: { userId: string; parentId?: string },
+  token: string
+) {
+  const res = await axios.post(`${API_URL}/affiliates`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.data;
+}

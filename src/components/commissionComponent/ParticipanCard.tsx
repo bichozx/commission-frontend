@@ -3,6 +3,7 @@ import { Participant } from '@/types/hirerachy';
 interface Props {
   participant: Participant;
   level?: number;
+  onEdit?: () => void;
 }
 
 export default function ParticipantCard({ participant, level = 0 }: Props) {

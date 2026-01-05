@@ -18,3 +18,26 @@ export async function loginService(email: string, password: string) {
     level: data.affiliate.level ?? 1,
   };
 }
+
+import axios from 'axios';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+export interface RegisterAffiliatePayload {
+  email: string;
+  password: string;
+  name: string;
+}
+
+export async function registerAffiliate(
+  data: RegisterAffiliatePayload,
+  token: string
+) {
+  const res = await axios.post(`${API_URL}/auth/register-affiliate`, data, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return res.data;
+}

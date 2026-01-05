@@ -2,10 +2,8 @@ import {
   addParticipant,
   deleteParticipant,
   fetchCommissionsByLevel,
-  fetchHierarchy,
   updateParticipant,
 } from '@/services/commissionservice';
-import { buildHierarchy, flattenHierarchy } from '@/services/hierarchyUtils';
 
 import { Participant } from '@/types/hirerachy';
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -15,7 +13,7 @@ import { create } from 'zustand';
 interface CommissionState {
   // Para jerarquía
   participants: Participant[];
-  flatParticipants: Participant[]; // NUEVO: Lista plana de todos los participantes
+  flatParticipants: Participant[];
 
   // Para vista por niveles
   currentLevel: number;
@@ -67,9 +65,7 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      // 1️⃣ Llamada al backend
       const tree = await affiliateTree(userId, token);
-      console.log('🚀 affiliateTree response:', tree);
 
       if (!tree) {
         set({ participants: [], flatParticipants: [], loading: false });
@@ -92,7 +88,6 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
 
       const rootNode: Participant = normalizeNode(tree);
 
-      // 3️⃣ Aplanar árbol
       const flatParticipants: Participant[] = [];
       const traverse = (node: Participant) => {
         flatParticipants.push({ ...node, children: [] });
@@ -102,7 +97,7 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
 
       // 4️⃣ Guardar en el estado
       set({
-        participants: [rootNode], // raíz del árbol
+        participants: [rootNode],
         flatParticipants,
         loading: false,
       });
@@ -126,7 +121,6 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
     try {
       const data = await fetchCommissionsByLevel(userId, token);
 
-      // Transformar los datos para que sean más fáciles de usar
       const levelStats = {
         1: data.byLevel?.level1 || {
           count: 0,

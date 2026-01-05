@@ -1,27 +1,25 @@
 'use client';
 
-import { AffiliateLevel, ParticipantCardProps } from '@/types/hirerachy';
+import { AffiliateLevel, Participant } from '@/types/hirerachy';
+
+export interface ParticipantCardProps {
+  participant: Participant;
+  onEdit?: () => void;
+  compact?: boolean;
+}
 
 export default function ParticipantCard({
   participant,
   onEdit,
   compact = false,
 }: ParticipantCardProps) {
-  const {
-    id,
-    name,
-    email,
-    level,
-    //totalCommission,
-    totalEarned,
-    children = [],
-  } = participant;
+  const { id, name, email, level, totalEarned, children = [] } = participant;
 
   const levelStyles: Record<AffiliateLevel, string> = {
     1: 'bg-blue-100 text-blue-800',
     2: 'bg-green-100 text-green-800',
     3: 'bg-purple-100 text-purple-800',
-  } as const;
+  };
 
   return (
     <div
@@ -36,9 +34,7 @@ export default function ParticipantCard({
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-lg">{name}</h3>
             <span
-              className={`px-2 py-0.5 text-xs rounded font-medium ${
-                levelStyles[level] ?? 'bg-gray-100 text-gray-800'
-              }`}
+              className={`px-2 py-0.5 text-xs rounded font-medium ${levelStyles[level]}`}
             >
               Nivel {level}
             </span>

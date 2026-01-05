@@ -13,9 +13,4 @@ export type Participant = {
   totalCommissionsFromYou?: number;
 };
 
-export interface ParticipantCardProps {
-  participant: Participant;
-  onEdit?: () => void;
-  compact?: boolean;
-}
 export type AffiliateLevel = 1 | 2 | 3;

@@ -1,169 +1,141 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// src/components/commission/ParticipantForm.tsx
 'use client';
 
+import { Participant } from '@/types/hirerachy';
+import { registerAffiliate } from '@/services/autService';
 import { useAuthStore } from '@/context/stores/authStore';
 import { useCommissionStore } from '@/context/stores/commissionStore';
 import { useState } from 'react';
 
 interface ParticipantFormProps {
   onClose: () => void;
-  participant?: any; // Para modo edición
+  participant: Participant | null; // 👈 AFILIADO PADRE
 }
 
 export default function ParticipantForm({
   onClose,
   participant,
 }: ParticipantFormProps) {
-  const { token } = useAuthStore();
-  const { addNewParticipant, updateExistingParticipant, loading } =
-    useCommissionStore();
+  const token = useAuthStore((state) => state.token);
+  const affiliateId = useAuthStore((state) => state.userId); // afiliado logueado
+  const { fetchHierarchyData } = useCommissionStore();
 
   const [formData, setFormData] = useState({
-    name: participant?.name || '',
-    email: participant?.email || '',
-    commissionPercentage: participant?.commissionPercentage || 10,
-    level: participant?.level || 1,
-    parentId: participant?.parentId || '',
+    name: '',
+    email: '',
+    password: '',
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!formData.name.trim()) newErrors.name = 'Nombre es requerido';
-    if (!formData.email.trim()) newErrors.email = 'Email es requerido';
-    if (!/^\S+@\S+\.\S+$/.test(formData.email))
-      newErrors.email = 'Email inválido';
-    if (
-      formData.commissionPercentage < 0 ||
-      formData.commissionPercentage > 100
-    ) {
-      newErrors.commissionPercentage = 'Comisión debe ser entre 0 y 100%';
-    }
-    if (formData.level < 1) newErrors.level = 'Nivel debe ser mayor a 0';
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const parentAffiliateId = participant?.id ?? affiliateId ?? null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
 
-    if (!validateForm() || !token) return;
+    if (!token || !parentAffiliateId) {
+      setError('No autenticado o afiliado inválido');
+      return;
+    }
 
     try {
-      if (participant) {
-        await updateExistingParticipant(participant.id, formData, token);
-      } else {
-        await addNewParticipant(formData, token);
-      }
+      setLoading(true);
+
+      await registerAffiliate(
+        {
+          ...formData,
+        },
+        token
+      );
+
+      // 🔁 refrescar árbol desde el padre
+      await fetchHierarchyData(parentAffiliateId, token);
+
       onClose();
-    } catch (error) {
-      console.error('Error saving participant:', error);
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ?? 'Error registrando el nuevo afiliado'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-4">
-          {participant ? 'Editar Participante' : 'Nuevo Participante'}
-        </h2>
+        <h2 className="text-xl font-bold mb-4">Registrar Nuevo Afiliado</h2>
+
+        {participant && (
+          <p className="text-sm text-gray-500 mb-3">
+            Afiliado padre:{' '}
+            <strong>
+              {participant.name} (Nivel {participant.level})
+            </strong>
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Nombre</label>
+            <label className="block text-sm font-medium mb-1">
+              Nombre completo
+            </label>
             <input
               type="text"
+              required
               value={formData.name}
               onChange={(e) =>
                 setFormData({ ...formData, name: e.target.value })
               }
               className="w-full p-2 border rounded"
-              disabled={loading}
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm">{errors.name}</p>
-            )}
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-1">Email</label>
             <input
               type="email"
+              required
               value={formData.email}
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
               className="w-full p-2 border rounded"
-              disabled={loading}
             />
-            {errors.email && (
-              <p className="text-red-500 text-sm">{errors.email}</p>
-            )}
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Porcentaje de Comisión (%)
-            </label>
+            <label className="block text-sm font-medium mb-1">Contraseña</label>
             <input
-              type="number"
-              min="0"
-              max="100"
-              step="0.5"
-              value={formData.commissionPercentage}
+              type="password"
+              required
+              minLength={8}
+              value={formData.password}
               onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  commissionPercentage: parseFloat(e.target.value),
-                })
+                setFormData({ ...formData, password: e.target.value })
               }
               className="w-full p-2 border rounded"
-              disabled={loading}
             />
-            {errors.commissionPercentage && (
-              <p className="text-red-500 text-sm">
-                {errors.commissionPercentage}
-              </p>
-            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1">Nivel</label>
-            <select
-              value={formData.level}
-              onChange={(e) =>
-                setFormData({ ...formData, level: parseInt(e.target.value) })
-              }
-              className="w-full p-2 border rounded"
-              disabled={loading}
-            >
-              {[1, 2, 3, 4, 5].map((level) => (
-                <option key={level} value={level}>
-                  Nivel {level}
-                </option>
-              ))}
-            </select>
-          </div>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <div className="flex justify-end space-x-2 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 border rounded hover:bg-gray-50"
-              disabled={loading}
+              className="px-4 py-2 border rounded"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
             >
-              {loading ? 'Guardando...' : participant ? 'Actualizar' : 'Crear'}
+              {loading ? 'Registrando…' : 'Registrar Afiliado'}
             </button>
           </div>
         </form>

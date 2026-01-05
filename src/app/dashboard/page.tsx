@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 export default function DashboardPage() {
   const router = useRouter();
   const { token, userId, initializeAuth, logout } = useAuthStore();
+  const { level } = useAuthStore();
 
   const {
     participants,
@@ -113,6 +114,7 @@ export default function DashboardPage() {
     );
   }
 
+  console.log('🚀 ~ DashboardPage ~ selectedParticipant:', selectedParticipant);
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -129,18 +131,23 @@ export default function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
-            >
-              + Nuevo Participante
-            </button>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-            >
-              Cerrar Sesión
-            </button>
+            <div className="flex items-center space-x-4">
+              {level !== null && level < 3 && (
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+                >
+                  + Nuevo Afiliado
+                </button>
+              )}
+
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -228,10 +235,10 @@ export default function DashboardPage() {
                   <div key={p.id} className="relative">
                     <ParticipantCard
                       participant={p}
-                      // onEdit={() => {
-                      //   selectParticipant(p);
-                      //   setShowAddForm(true);
-                      // }}
+                      onEdit={() => {
+                        selectParticipant(p);
+                        setShowAddForm(true);
+                      }}
                     />
 
                     {/* Mostrar hijos si existen */}
@@ -246,10 +253,10 @@ export default function DashboardPage() {
                               <div className="absolute -left-6 top-4 w-4 h-0.5 bg-gray-300"></div>
                               <ParticipantCard
                                 participant={child}
-                                // onEdit={() => {
-                                //   selectParticipant(child);
-                                //   setShowAddForm(true);
-                                // }}
+                                onEdit={() => {
+                                  selectParticipant(child);
+                                  setShowAddForm(true);
+                                }}
                               />
                             </div>
                           ))}
@@ -298,7 +305,7 @@ export default function DashboardPage() {
       {/* Modal de formulario */}
       {showAddForm && (
         <ParticipantForm
-          participant={selectedParticipant}
+          participant={selectedParticipant} // 👈 correcto
           onClose={() => {
             setShowAddForm(false);
             selectParticipant(null);
