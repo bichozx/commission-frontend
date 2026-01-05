@@ -1,113 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-// import {
-//   addParticipant,
-//   deleteParticipant,
-//   fetchHierarchy,
-//   updateParticipant,
-// } from '@/services/commissionservice';
-
-// /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { Participant } from '@/types/hirerachy';
-// import { buildHierarchy } from '@/services/hierarchyUtils';
-// // src/context/stores/commissionStore.ts
-// import { create } from 'zustand';
-
-// interface CommissionState {
-//   participants: Participant[];
-//   currentLevel: number;
-//   loading: boolean;
-//   error: string | null;
-//   selectedParticipant: Participant | null;
-
-//   // Actions
-//   fetchParticipants: (userId: string, token: string) => Promise<void>;
-//   setCurrentLevel: (level: number) => void;
-//   selectParticipant: (participant: Participant | null) => void;
-//   addNewParticipant: (participantData: any, token: string) => Promise<void>;
-//   updateExistingParticipant: (
-//     id: string,
-//     participantData: any,
-//     token: string
-//   ) => Promise<void>;
-//   removeParticipant: (id: string, token: string) => Promise<void>;
-// }
-
-// export const useCommissionStore = create<CommissionState>((set, get) => ({
-//   participants: [],
-//   currentLevel: 1,
-//   loading: false,
-//   error: null,
-//   selectedParticipant: null,
-
-//   fetchParticipants: async (userId: string, token: string) => {
-//     set({ loading: true, error: null });
-//     try {
-//       const data = await fetchHierarchy(userId, token);
-//       const hierarchy = buildHierarchy(data);
-//       set({ participants: hierarchy, loading: false });
-//     } catch (error: any) {
-//       set({ error: error.message, loading: false });
-//     }
-//   },
-
-//   setCurrentLevel: (level: number) => {
-//     set({ currentLevel: level });
-//   },
-
-//   selectParticipant: (participant: Participant | null) => {
-//     set({ selectedParticipant: participant });
-//   },
-
-//   addNewParticipant: async (participantData: any, token: string) => {
-//     set({ loading: true });
-//     try {
-//       const newParticipant = await addParticipant(participantData, token);
-//       set((state) => ({
-//         participants: [...state.participants, newParticipant],
-//         loading: false,
-//       }));
-//     } catch (error: any) {
-//       set({ error: error.message, loading: false });
-//       throw error;
-//     }
-//   },
-
-//   updateExistingParticipant: async (
-//     id: string,
-//     participantData: any,
-//     token: string
-//   ) => {
-//     set({ loading: true });
-//     try {
-//       const updated = await updateParticipant(id, participantData, token);
-//       set((state) => ({
-//         participants: state.participants.map((p) =>
-//           p.id === id ? { ...p, ...updated } : p
-//         ),
-//         selectedParticipant: null,
-//         loading: false,
-//       }));
-//     } catch (error: any) {
-//       set({ error: error.message, loading: false });
-//       throw error;
-//     }
-//   },
-
-//   removeParticipant: async (id: string, token: string) => {
-//     set({ loading: true });
-//     try {
-//       await deleteParticipant(id, token);
-//       set((state) => ({
-//         participants: state.participants.filter((p) => p.id !== id),
-//         loading: false,
-//       }));
-//     } catch (error: any) {
-//       set({ error: error.message, loading: false });
-//       throw error;
-//     }
-//   },
-// }));
-
 import {
   addParticipant,
   deleteParticipant,
@@ -118,6 +8,8 @@ import {
 import { buildHierarchy, flattenHierarchy } from '@/services/hierarchyUtils';
 
 import { Participant } from '@/types/hirerachy';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { affiliateTree } from '@/services/affiliate';
 import { create } from 'zustand';
 
 interface CommissionState {
@@ -136,6 +28,7 @@ interface CommissionState {
     };
   };
   totalCommissions: number;
+  totalEarned: number;
   totalAmount: number;
 
   // Estado general
@@ -145,6 +38,7 @@ interface CommissionState {
 
   // Actions
   fetchHierarchyData: (userId: string, token: string) => Promise<void>;
+
   fetchLevelStats: (userId: string, token: string) => Promise<void>;
   setCurrentLevel: (level: number) => void;
   selectParticipant: (participant: Participant | null) => void;
@@ -163,35 +57,74 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
   currentLevel: 1,
   levelStats: {},
   totalCommissions: 0,
+  totalEarned: 0,
   totalAmount: 0,
   loading: false,
   error: null,
   selectedParticipant: null,
 
-  // Cargar jerarquía
   fetchHierarchyData: async (userId: string, token: string) => {
     set({ loading: true, error: null });
-    try {
-      const data = await fetchHierarchy(userId, token);
-      const hierarchy = buildHierarchy(data);
-      const flatList = flattenHierarchy(hierarchy); // NUEVO
 
+    try {
+      // 1️⃣ Llamada al backend
+      const tree = await affiliateTree(userId, token);
+      console.log('🚀 affiliateTree response:', tree);
+
+      if (!tree) {
+        set({ participants: [], flatParticipants: [], loading: false });
+        return;
+      }
+
+      // 2️⃣ Normalizar árbol en Participant
+      const normalizeNode = (node: any, parentId?: string): Participant => ({
+        id: node.id,
+        name: node.name,
+        email: node.email || '',
+        level: node.level,
+        totalEarned: node.totalEarned ?? 0,
+        totalCommission: node.totalCommission ?? 0,
+        parentId: parentId ?? undefined,
+        children:
+          node.children?.map((child: any) => normalizeNode(child, node.id)) ||
+          [],
+      });
+
+      const rootNode: Participant = normalizeNode(tree);
+
+      // 3️⃣ Aplanar árbol
+      const flatParticipants: Participant[] = [];
+      const traverse = (node: Participant) => {
+        flatParticipants.push({ ...node, children: [] });
+        node.children.forEach(traverse);
+      };
+      traverse(rootNode);
+
+      // 4️⃣ Guardar en el estado
       set({
-        participants: hierarchy,
-        flatParticipants: flatList, // NUEVO
+        participants: [rootNode], // raíz del árbol
+        flatParticipants,
         loading: false,
       });
+
+      console.table(
+        flatParticipants.map((p) => ({
+          name: p.name,
+          level: p.level,
+          totalEarned: p.totalEarned,
+          totalCommission: p.totalCommission,
+        }))
+      );
     } catch (error: any) {
+      console.error('❌ fetchHierarchyData error:', error);
       set({ error: error.message, loading: false });
     }
   },
 
-  // Cargar estadísticas por nivel (del nuevo endpoint)
   fetchLevelStats: async (userId: string, token: string) => {
     set({ loading: true, error: null });
     try {
       const data = await fetchCommissionsByLevel(userId, token);
-      console.log('📊 Datos por nivel del backend:', data);
 
       // Transformar los datos para que sean más fáciles de usar
       const levelStats = {
@@ -227,7 +160,6 @@ export const useCommissionStore = create<CommissionState>((set, get) => ({
   },
 
   setCurrentLevel: (level: number) => {
-    console.log('🎯 Cambiando nivel a:', level);
     set({ currentLevel: level });
   },
 

@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Commission Frontend (Provisional)
 
-## Getting Started
+Repositorio provisional del frontend de Commission App, desplegado en: https://commission-frontend-nine.vercel.app
 
-First, run the development server:
+Tecnologías
 
-```bash
+Next.js 13+
+
+TypeScript
+
+TailwindCSS
+
+Zustand para manejo de estado global
+
+Axios para consumo de API REST
+
+Vercel para despliegue
+
+Scripts disponibles
+
+# Instalar dependencias
+
+npm install
+
+# Correr en modo desarrollo
+
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+# Compilar y exportar versión de producción
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+npm run build
+npm run start
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Linting
 
-## Learn More
+npm run lint
 
-To learn more about Next.js, take a look at the following resources:
+El frontend corre por defecto en: http://localhost:3000
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Variables de entorno
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Crea un archivo .env.local en la raíz del proyecto:
 
-## Deploy on Vercel
+NEXT_PUBLIC_API_URL=https://commission-backend-11px.onrender.com
+NEXT_PUBLIC_AUTH_TOKEN=<tu_token_de_prueba>
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Nota: NEXT*PUBLIC* es necesario para exponer las variables al cliente en Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Estructura principal
+/pages
+├─ index.tsx # Home / Dashboard
+├─ \_app.tsx # Configuración global (Zustand, Tailwind)
+└─ api/ # Llamadas API (opcional)
+/components
+├─ ParticipantCard.tsx
+├─ ParticipantTree.tsx
+└─ ...otros componentes
+/services
+├─ affiliate.ts # Llamadas a /affiliates/tree y jerarquía
+├─ commissionservice.ts
+└─ hierarchyUtils.ts # buildHierarchy y flattenHierarchy
+/types
+└─ hirerachy.ts # Interfaces Participant, AffiliateTreeNode
+/store
+└─ commissionStore.ts # Zustand store
+
+Consumo de API
+
+Obtener árbol de afiliados
+
+import { affiliateTree } from '@/services/affiliate';
+
+const tree = await affiliateTree(userId, token);
+console.log(tree);
+
+Ejemplo de respuesta:
+
+{
+"id": "9ffaf2f0-7a5d-4922-a0ba-67c272d17257",
+"name": "Napoleon Robertpo",
+"email": "danger5@test.com",
+"level": 2,
+"totalEarned": 250,
+"status": "active",
+"parentId": "088973b7-e56b-4036-aed9-47f5590f3c5f",
+"children": [
+{
+"id": "08a6ca6f-0aad-4eca-ba47-bf3b214592ae",
+"name": "Eliana Martha",
+"email": "danger6@test.com",
+"level": 3,
+"totalEarned": 0,
+"status": "active",
+"parentId": "9ffaf2f0-7a5d-4922-a0ba-67c272d17257",
+"children": []
+}
+]
+}
+
+Otros endpoints
+
+GET /affiliates/hierarchy
+
+GET /affiliates/tree/:id
+
+POST /affiliates
+
+PUT /affiliates/:id
+
+GET /affiliates?level=<number>
+
+Estado global con Zustand
+import { useCommissionStore } from '@/store/commissionStore';
+
+const { participants, flatParticipants, fetchHierarchyData } = useCommissionStore();
+
+useEffect(() => {
+fetchHierarchyData(userId, token);
+}, [userId, token]);
+
+participants → árbol jerárquico
+
+flatParticipants → lista plana para tablas o filtros
+
+Visualización
+
+Componente ParticipantCard
+Muestra nombre, email, nivel, total ganado y referidos directos.
+
+Componente ParticipantTree
+Renderiza el árbol de afiliados de forma anidada.
+
+Debug / Logs
+
+console.log('🚀 affiliateTree response:', tree);
+
+console.table(flatParticipants);
+
+Útil para verificar que la jerarquía se normaliza correctamente.
+
+Despliegue en Vercel
+
+Este proyecto ya está desplegado en: https://commission-frontend-nine.vercel.app
+
+Para actualizar: git push → Vercel detecta cambios y redeploy automático.

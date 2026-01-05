@@ -1,13 +1,3 @@
-// export interface Participant {
-//   id: string;
-//   name: string;
-//   email: string;
-//   level: number; // Nivel jerárquico
-//   parentId?: string; // Id del afiliado superior
-//   children?: Participant[]; // Subafiliados directos
-//   totalCommission: number;
-// }
-
 // types/hierarchy.ts
 export type Participant = {
   id: string;
@@ -15,8 +5,9 @@ export type Participant = {
   email: string;
   totalCommission: number;
   children: Participant[];
-  level: number;
+  level: AffiliateLevel;
   parentId?: string;
+  totalEarned: number;
   commissionPercentage?: number;
   totalEarnedFromYou?: number;
   totalCommissionsFromYou?: number;
@@ -27,3 +18,4 @@ export interface ParticipantCardProps {
   onEdit?: () => void;
   compact?: boolean;
 }
+export type AffiliateLevel = 1 | 2 | 3;

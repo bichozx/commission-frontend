@@ -1,109 +1,47 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Participant } from '@/types/hirerachy';
 
-// services/hierarchyUtils.ts
-// type BackendHierarchy = {
-//   current?: any;
-//   [key: string]: any; // level1, level2, ...
-// };
-
-// export function buildHierarchy(data: BackendHierarchy): Participant[] {
-//   const hierarchy: Participant[] = [];
-
-//   // Si existe current, es el nodo raíz
-//   if (data.current) {
-//     const rootNode: Participant = {
-//       id: data.current.id,
-//       name: data.current.name,
-//       email: data.current.email || '',
-//       totalCommission: data.current.totalEarned || 0,
-//       children: [],
-//       level: data.current.level || 1,
-//       parentId: undefined,
-//     };
-
-//     // Construimos la jerarquía de niveles
-//     let currentParent = rootNode;
-
-//     // Procesamos todos los niveles en orden (level1, level2, etc.)
-//     for (let i = 1; i <= 10; i++) {
-//       // Asume máximo 10 niveles
-//       const levelKey = `level${i}`;
-//       const levelData = data[levelKey];
-
-//       if (!levelData) break;
-
-//       const childNode: Participant = {
-//         id: levelData.id,
-//         name: levelData.name,
-//         email: levelData.email || '',
-//         totalCommission:
-//           levelData.totalEarnedFromYou || levelData.totalEarned || 0,
-//         children: [],
-//         level: i + 1, // level1 es nivel 2 en la jerarquía, level2 es nivel 3, etc.
-//         parentId: currentParent.id,
-//       };
-
-//       currentParent.children.push(childNode);
-//       currentParent = childNode; // El siguiente nivel será hijo de este
-//     }
-
-//     hierarchy.push(rootNode);
-//   }
-
-//   return hierarchy;
-// }
-
-// src/services/hierarchyUtils.ts - Agrega esta función
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type BackendHierarchy = {
-  current?: any;
-  [key: string]: any; // level1, level2, ...
+  current: any;
+  uplines: any[];
 };
 
 export function buildHierarchy(data: BackendHierarchy): Participant[] {
   if (!data.current) return [];
 
-  const rootLevel = data.current.level;
-
+  // 1️⃣ Crear root (current)
   const root: Participant = {
     id: data.current.id,
     name: data.current.name,
-    email: '',
+    email: data.current.email || '',
     totalCommission: data.current.totalEarned || 0,
-    level: rootLevel,
-    parentId: undefined,
+    totalEarned: data.current.totalEarned || 0,
+    level: data.current.level, // ✅ REAL
+    parentId: data.current.parentId ?? undefined,
     children: [],
   };
 
-  let currentParent = root;
-  let currentLevel = rootLevel;
+  // 2️⃣ Iterar uplines SIN modificar level
+  let parent = root;
 
-  Object.keys(data)
-    .filter((key) => key !== 'current')
-    .sort() // level1, level2, level3...
-    .forEach((key) => {
-      const item = data[key];
-      if (!item) return;
+  data.uplines.forEach((upline) => {
+    const node: Participant = {
+      id: upline.id,
+      name: upline.name,
+      email: upline.email || '',
+      totalCommission: upline.totalEarned || 0,
+      level: upline.level, // ✅ REAL desde backend
+      totalEarned: upline.totalEarned || 0,
+      parentId: upline.parentId ?? undefined,
+      commissionPercentage: upline.commissionPercentage,
+      totalEarnedFromYou: upline.totalEarnedFromYou,
+      totalCommissionsFromYou: upline.totalCommissionsFromYou,
+      children: [],
+    };
 
-      currentLevel -= 1; // ⬇️ BAJA DE NIVEL
-
-      const child: Participant = {
-        id: item.id,
-        name: item.name,
-        email: item.email || '',
-        totalCommission: item.totalEarnedFromYou || 0,
-        level: currentLevel,
-        parentId: currentParent.id,
-        commissionPercentage: item.commissionPercentage,
-        totalEarnedFromYou: item.totalEarnedFromYou,
-        totalCommissionsFromYou: item.totalCommissionsFromYou,
-        children: [],
-      };
-
-      currentParent.children.push(child);
-      currentParent = child;
-    });
+    parent.children.push(node);
+    parent = node;
+  });
 
   return [root];
 }

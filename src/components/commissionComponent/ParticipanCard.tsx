@@ -11,8 +11,9 @@ export default function ParticipantCard({ participant, level = 0 }: Props) {
       <p className="font-bold">{participant.name}</p>
       <p className="text-sm text-gray-500">{participant.email}</p>
       <p className="text-sm text-green-600">
-        Commission: ${participant.totalCommission}
+        Commission: ${participant.totalEarned}
       </p>
+      <p className="text-sm text-green-600">Level: ${participant.level}</p>
 
       {(participant.children || []).length > 0 && (
         <div className="mt-2 space-y-2">

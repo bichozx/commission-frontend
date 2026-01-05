@@ -1,67 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-// import { Participant } from '@/types/hirerachy';
-// // services/commissionService.ts
-// import axios from 'axios';
-
-// export const fetchHierarchy = async (
-//   affiliateId: string,
-//   token: string
-// ): Promise<Participant[]> => {
-//   const res = await axios.get(
-//     `https://commission-backend-11px.onrender.com/commissions/hierarchy/${affiliateId}`,
-//     {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     }
-//   );
-//   return res.data;
-// };
-
-// src/services/commissionService.ts
-// import axios from 'axios';
-
-// export async function fetchHierarchy(affiliateId: string, token: string) {
-//   const res = await axios.get(
-//     `https://commission-backend-11px.onrender.com/commissions/hierarchy/${affiliateId}`,
-//     {
-//       headers: { Authorization: `Bearer ${token}` },
-//     }
-//   );
-
-//   // Devuelve solo current y level
-//   return {
-//     current: res.data.current,
-//     level: res.data.level,
-//   };
-// }
-
-// services/commissionService.ts
-// import axios from 'axios';
-
-// export async function fetchHierarchy(affiliateId: string, token: string) {
-//   const res = await axios.get(
-//     `https://commission-backend-11px.onrender.com/commissions/hierarchy/${affiliateId}`,
-//     {
-//       headers: { Authorization: `Bearer ${token}` },
-//     }
-//   );
-
-//   // Devuelve todos los datos
-//   return res.data;
-// }
-
-// src/services/commissionService.ts - Ampliar
 import axios from 'axios';
 
 const API_URL = 'https://commission-backend-11px.onrender.com';
 
 // Función existente
 export async function fetchHierarchy(affiliateId: string, token: string) {
-  const res = await axios.get(
-    `${API_URL}/commissions/hierarchy/${affiliateId}`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
+  const res = await axios.get(`${API_URL}/affiliates/tree/${affiliateId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  console.log('🚀 ~ fetchHierarchy ~ res:', res);
   return res.data;
 }
 

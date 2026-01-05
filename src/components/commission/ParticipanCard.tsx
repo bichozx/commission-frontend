@@ -1,120 +1,6 @@
-// src/components/commissionComponent/ParticipanCard.tsx
 'use client';
 
-// import { Participant } from '@/types/hirerachy';
-
-// interface ParticipantCardProps {
-//   participant: Participant;
-//   onEdit?: () => void;
-//   compact?: boolean;
-// }
-
-// export default function ParticipantCard({
-//   participant,
-//   onEdit,
-//   compact = false,
-// }: ParticipantCardProps) {
-//   const {
-//     id,
-//     name,
-//     email,
-//     totalCommission,
-//     level,
-//     commissionPercentage,
-//     totalEarnedFromYou,
-//     totalCommissionsFromYou,
-//     children = [],
-//   } = participant;
-
-//   return (
-//     <div
-//       className={`bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow ${
-//         compact ? '' : 'mb-3'
-//       }`}
-//     >
-//       <div className="flex justify-between items-start">
-//         <div className="flex-1">
-//           <div className="flex items-center space-x-2">
-//             <h3 className="font-bold text-lg">{name}</h3>
-//             <span
-//               className={`px-2 py-1 text-xs rounded ${
-//                 level === 1
-//                   ? 'bg-blue-100 text-blue-800'
-//                   : level === 2
-//                   ? 'bg-green-100 text-green-800'
-//                   : level === 3
-//                   ? 'bg-purple-100 text-purple-800'
-//                   : 'bg-gray-100 text-gray-800'
-//               }`}
-//             >
-//               Nivel {level}
-//             </span>
-//           </div>
-
-//           {email && <p className="text-gray-600 text-sm mt-1">{email}</p>}
-
-//           <div className="mt-2 grid grid-cols-2 gap-2">
-//             <div>
-//               <p className="text-xs text-gray-500">Comisión Total</p>
-//               <p className="font-bold text-green-600">
-//                 ${totalCommission.toLocaleString()}
-//               </p>
-//             </div>
-
-//             {commissionPercentage !== undefined && (
-//               <div>
-//                 <p className="text-xs text-gray-500">Porcentaje</p>
-//                 <p className="font-medium">{commissionPercentage}%</p>
-//               </div>
-//             )}
-
-//             {totalEarnedFromYou !== undefined && (
-//               <div>
-//                 <p className="text-xs text-gray-500">Ganado de ti</p>
-//                 <p className="font-medium">
-//                   ${totalEarnedFromYou.toLocaleString()}
-//                 </p>
-//               </div>
-//             )}
-
-//             {totalCommissionsFromYou !== undefined && (
-//               <div>
-//                 <p className="text-xs text-gray-500">Comisiones pagadas</p>
-//                 <p className="font-medium">
-//                   ${totalCommissionsFromYou.toLocaleString()}
-//                 </p>
-//               </div>
-//             )}
-//           </div>
-
-//           {children.length > 0 && !compact && (
-//             <div className="mt-3 pt-3 border-t border-gray-100">
-//               <p className="text-xs text-gray-500">
-//                 Referidos directos: {children.length}
-//               </p>
-//             </div>
-//           )}
-//         </div>
-
-//         {onEdit && (
-//           <button
-//             onClick={onEdit}
-//             className="ml-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-//             title="Editar participante"
-//           >
-//             Editar
-//           </button>
-//         )}
-//       </div>
-
-//       <div className="mt-3 pt-3 border-t border-gray-100">
-//         <p className="text-xs text-gray-400">ID: {id.substring(0, 8)}...</p>
-//       </div>
-//     </div>
-//   );
-// }
-
-import { Participant, ParticipantCardProps } from '@/types/hirerachy';
+import { AffiliateLevel, ParticipantCardProps } from '@/types/hirerachy';
 
 export default function ParticipantCard({
   participant,
@@ -125,97 +11,74 @@ export default function ParticipantCard({
     id,
     name,
     email,
-    totalCommission,
     level,
-    commissionPercentage,
-    totalEarnedFromYou,
-    totalCommissionsFromYou,
+    //totalCommission,
+    totalEarned,
     children = [],
   } = participant;
+
+  const levelStyles: Record<AffiliateLevel, string> = {
+    1: 'bg-blue-100 text-blue-800',
+    2: 'bg-green-100 text-green-800',
+    3: 'bg-purple-100 text-purple-800',
+  } as const;
 
   return (
     <div
       className={`bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow ${
-        compact ? '' : 'mb-3'
+        compact ? '' : 'mb-4'
       }`}
     >
       <div className="flex justify-between items-start">
+        {/* Info principal */}
         <div className="flex-1">
-          <div className="flex items-center space-x-2">
-            <h3 className="font-bold text-lg">{name}</h3>
+          {/* Nombre + Nivel */}
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-lg">{name}</h3>
             <span
-              className={`px-2 py-1 text-xs rounded ${
-                level === 1
-                  ? 'bg-blue-100 text-blue-800'
-                  : level === 2
-                  ? 'bg-green-100 text-green-800'
-                  : level === 3
-                  ? 'bg-purple-100 text-purple-800'
-                  : 'bg-gray-100 text-gray-800'
+              className={`px-2 py-0.5 text-xs rounded font-medium ${
+                levelStyles[level] ?? 'bg-gray-100 text-gray-800'
               }`}
             >
               Nivel {level}
             </span>
           </div>
 
-          {email && <p className="text-gray-600 text-sm mt-1">{email}</p>}
+          {/* Email */}
+          {email && <p className="text-gray-500 text-sm mt-1">{email}</p>}
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          {/* Métricas */}
+          <div className="mt-3 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs text-gray-500">Comisión Total</p>
-              <p className="font-bold text-green-600">
-                ${totalCommission.toLocaleString()}
+              <p className="text-xs text-gray-500">Total ganado</p>
+              <p className="text-lg font-bold text-green-600">
+                ${totalEarned.toLocaleString()}
               </p>
             </div>
 
-            {commissionPercentage !== undefined && (
+            {!compact && (
               <div>
-                <p className="text-xs text-gray-500">Porcentaje</p>
-                <p className="font-medium">{commissionPercentage}%</p>
-              </div>
-            )}
-
-            {totalEarnedFromYou !== undefined && (
-              <div>
-                <p className="text-xs text-gray-500">Ganado de ti</p>
-                <p className="font-medium">
-                  ${totalEarnedFromYou.toLocaleString()}
-                </p>
-              </div>
-            )}
-
-            {totalCommissionsFromYou !== undefined && (
-              <div>
-                <p className="text-xs text-gray-500">Comisiones pagadas</p>
-                <p className="font-medium">
-                  ${totalCommissionsFromYou.toLocaleString()}
-                </p>
+                <p className="text-xs text-gray-500">Referidos directos</p>
+                <p className="font-medium">{children.length}</p>
               </div>
             )}
           </div>
-
-          {children.length > 0 && !compact && (
-            <div className="mt-3 pt-3 border-t border-gray-100">
-              <p className="text-xs text-gray-500">
-                Referidos directos: {children.length}
-              </p>
-            </div>
-          )}
         </div>
 
+        {/* Editar */}
         {onEdit && (
           <button
             onClick={onEdit}
-            className="ml-2 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
-            title="Editar participante"
+            className="ml-3 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
           >
             Editar
           </button>
         )}
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-100">
-        <p className="text-xs text-gray-400">ID: {id.substring(0, 8)}...</p>
+      {/* Footer */}
+      <div className="mt-4 pt-3 border-t border-gray-100">
+        <p className="text-xs text-gray-400">ID: {id.slice(0, 8)}...</p>
       </div>
     </div>
   );
