@@ -10,7 +10,7 @@ export interface ParticipantCardProps {
 
 export default function ParticipantCard({
   participant,
-  onEdit,
+
   compact = false,
 }: ParticipantCardProps) {
   const { id, name, email, level, totalEarned, children = [] } = participant;

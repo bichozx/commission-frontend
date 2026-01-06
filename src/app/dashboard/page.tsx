@@ -22,8 +22,6 @@ export default function DashboardPage() {
     fetchAffiliatesByLevel,
     selectParticipant,
     selectedParticipant,
-    totalEarned,
-    totalAmount,
   } = useCommissionStore();
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -175,7 +173,7 @@ export default function DashboardPage() {
       </main>
 
       {/* Modal */}
-      {showAddForm && selectedParticipant?.affiliate ? (
+      {showAddForm && (
         <ParticipantForm
           participant={selectedParticipant}
           onClose={() => {
@@ -183,7 +181,7 @@ export default function DashboardPage() {
             selectParticipant(null);
           }}
         />
-      ) : null}
+      )}
     </div>
   );
 }
