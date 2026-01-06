@@ -6,7 +6,6 @@ import { AffiliateLevel } from '@/types/hirerachy';
 import LevelView from '@/components/commission/LevelView';
 import ParticipantCard from '@/components/commissionComponent/ParticipanCard';
 import ParticipantForm from '@/components/commission/ParticipanForm';
-import UpdateAffiliateForm from '@/components/commissionComponent/UpdateAffiliateForm';
 import { useAuthStore } from '@/context/stores/authStore';
 import { useCommissionStore } from '@/context/stores/commissionStore';
 import { useRouter } from 'next/navigation';
@@ -177,21 +176,6 @@ export default function DashboardPage() {
 
       {/* Modal */}
       {showAddForm && selectedParticipant?.affiliate ? (
-        <UpdateAffiliateForm
-          affiliate={selectedParticipant.affiliate}
-          onClose={() => {
-            setShowAddForm(false);
-            selectParticipant(null);
-          }}
-          onUpdated={() => {
-            if (token && userId) {
-              fetchHierarchyData(userId, token);
-            }
-            setShowAddForm(false);
-            selectParticipant(null);
-          }}
-        />
-      ) : showAddForm ? (
         <ParticipantForm
           participant={selectedParticipant}
           onClose={() => {
