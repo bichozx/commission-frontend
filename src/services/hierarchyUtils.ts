@@ -6,6 +6,8 @@ type BackendHierarchy = {
   uplines: any[];
 };
 
+export type AffiliateStatus = 'ACTIVE' | 'INACTIVE';
+
 export function buildHierarchy(data: BackendHierarchy): Participant[] {
   if (!data.current) return [];
 

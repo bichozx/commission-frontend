@@ -1,3 +1,4 @@
+import { AffiliateStatus } from '@/services/hierarchyUtils';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from 'zustand';
 import { updateParticipant } from '@/services/commissionservice';
@@ -8,7 +9,7 @@ export interface Affiliate {
   level: number;
   commissionRate?: number;
   totalEarned: number;
-  status?: string;
+  status: AffiliateStatus;
   name?: string;
   email?: string;
   parentId?: string;

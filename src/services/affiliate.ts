@@ -7,6 +7,7 @@ import {
   updateParticipant,
 } from '@/services/commissionservice';
 
+import { AffiliateStatus } from './hierarchyUtils';
 import { LevelStats } from '@/types/commission';
 import axios from 'axios';
 import { create } from 'zustand';
@@ -20,18 +21,12 @@ export interface Affiliate {
   level: number;
   commissionRate?: number;
   totalEarned: number;
-  status?: string;
+  status: AffiliateStatus;
   name?: string;
   email?: string;
   parentId?: string;
   user?: { name: string; email: string };
   children: Affiliate[]; // ✅ nunca never[]
-}
-
-export interface UpdateAffiliateDto {
-  level?: number;
-  commissionRate?: number;
-  status?: string;
 }
 
 // --- Servicios ---
@@ -55,17 +50,6 @@ export async function createAffiliate(
   return res.data;
 }
 
-export async function updateAffiliate(
-  affiliateId: string,
-  data: UpdateAffiliateDto,
-  token: string
-): Promise<Affiliate> {
-  const res = await axios.put(`${API_URL}/affiliates/${affiliateId}`, data, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  return res.data;
-}
-
 export async function getAffiliatesByLevel(
   token: string,
   level?: number
@@ -83,7 +67,7 @@ export async function getAffiliatesByLevel(
     level: a.level,
     totalEarned: parseFloat(a.totalEarned ?? 0),
     commissionRate: parseFloat(a.commissionRate ?? 0),
-    status: a.status ?? 'active',
+    status: a.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
     name: a.user?.name ?? '',
     email: a.user?.email ?? '',
     parentId: a.parentId,
