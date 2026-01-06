@@ -52,7 +52,7 @@ export default function DashboardPage() {
         if (viewMode === 'hierarchy') {
           await fetchHierarchyData(userId, token);
         } else {
-          await fetchAffiliatesByLevel(token, safeLevel(level));
+          //await fetchAffiliatesByLevel(token, safeLevel(level));
         }
       } catch (err) {
         console.error('Error loading data:', err);
@@ -111,9 +111,40 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow px-6 py-4 flex justify-between">
+      {/* <header className="bg-white shadow px-6 py-4 flex justify-between">
         <h1 className="text-xl font-bold">Dashboard de Comisiones</h1>
         <button onClick={handleLogout}>Cerrar sesión</button>
+      </header> */}
+      <header className="bg-white shadow px-6 py-4 flex justify-between items-center">
+        <div>
+          <h1 className="text-xl font-bold text-gray-900">
+            Dashboard de Comisiones
+          </h1>
+          <p className="text-sm text-gray-500">
+            {userId ? `Usuario ID: ${userId.slice(0, 8)}...` : ''}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {level !== null && level < 3 && (
+            <button
+              onClick={() => {
+                setShowAddForm(true);
+                selectParticipant(null);
+              }}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+            >
+              + Nuevo Afiliado
+            </button>
+          )}
+
+          <button
+            onClick={handleLogout}
+            className="px-4 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+          >
+            Cerrar sesión
+          </button>
+        </div>
       </header>
 
       <main className="max-w-7xl mx-auto p-6">

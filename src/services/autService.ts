@@ -22,7 +22,7 @@ export async function loginService(email: string, password: string) {
 import { RegisterAffiliatePayload } from '@/types/AuthUser';
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = 'https://commission-backend-11px.onrender.com';
 
 export async function registerAffiliate(
   data: RegisterAffiliatePayload,
