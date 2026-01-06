@@ -5,7 +5,7 @@ import {
   deleteParticipant,
   updateParticipant,
 } from '@/services/commissionservice';
-import { affiliateTree, getAffiliatesByLeve } from '@/services/affiliate';
+import { affiliateTree, getAffiliatesByLevel } from '@/services/affiliate';
 
 import { Affiliate } from './affiliateStore';
 import { LevelStats } from '@/types/commission';
@@ -76,7 +76,7 @@ export const useCommissionStore = create<CommissionState>((set, get) => {
 
   // Construye hijos recursivamente
   const buildChildren = (node: Participant, affiliateNode: Affiliate) => {
-    node.children = (affiliateNode.children ?? []).map((child: Affiliate) => {
+    node.children = affiliateNode.children.map((child) => {
       const childNode = mapAffiliateToParticipant(child, node.id);
       buildChildren(childNode, child);
       return childNode;
@@ -117,7 +117,7 @@ export const useCommissionStore = create<CommissionState>((set, get) => {
     fetchAffiliatesByLevel: async (token, level) => {
       set({ loading: true, error: null });
       try {
-        const data: Affiliate[] = await getAffiliatesByLeve(token, level);
+        const data: Affiliate[] = await getAffiliatesByLevel(token, level);
         const participants = data.map((a) => mapAffiliateToParticipant(a));
         set({ participants, flatParticipants: participants, loading: false });
       } catch (err: any) {

@@ -3,15 +3,17 @@ import { create } from 'zustand';
 import { updateParticipant } from '@/services/commissionservice';
 
 export interface Affiliate {
-  user: any;
-  children: never[];
   id: string;
   userId: string;
   level: number;
-  parentId?: string | null;
-  commissionRate: number;
-  status: 'active' | 'inactive';
+  commissionRate?: number;
   totalEarned: number;
+  status?: string;
+  name?: string;
+  email?: string;
+  parentId?: string;
+  user?: { name: string; email: string };
+  children: Affiliate[]; // ✅ nunca never[]
 }
 
 interface AffiliateState {

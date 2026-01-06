@@ -1,21 +1,19 @@
-import { Affiliate } from '@/services/affiliate';
+import { Affiliate } from '@/context/stores/affiliateStore';
 
 // types/hierarchy.ts
 export type Participant = {
   id: string;
   name: string;
   email: string;
-  totalCommission: number;
-  children: Participant[];
   level: number;
-  parentId?: string;
   totalEarned: number;
+  totalCommission: number;
+  parentId?: string;
+  children: Participant[];
   commissionPercentage?: number;
   totalEarnedFromYou?: number;
   totalCommissionsFromYou?: number;
-  // types/hirerachy.ts
-
-  affiliate?: Affiliate; // <-- agregamos aquí la relación
+  affiliate?: Affiliate; // ✅ children ya está tipado correctamente
 };
 
 // Props para el UpdateAffiliateForm
