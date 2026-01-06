@@ -16,10 +16,13 @@ export default function UpdateAffiliateForm({
 }: UpdateAffiliateFormProps) {
   const { token } = useAuthStore();
 
+  const normalizedStatus =
+    affiliate.status?.toUpperCase() === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE';
+
   const [formData, setFormData] = useState<UpdateAffiliateDto>({
     level: affiliate.level,
     commissionRate: affiliate.commissionRate,
-    status: affiliate.status.toUpperCase() as 'ACTIVE' | 'INACTIVE',
+    status: normalizedStatus,
   });
 
   const [loading, setLoading] = useState(false);
