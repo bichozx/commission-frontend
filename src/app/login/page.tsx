@@ -20,7 +20,6 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       const data = await loginService(formData.email, formData.password);
-      console.log(data);
 
       // Mapea correctamente la respuesta del backend
       const token = data.token;
