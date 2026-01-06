@@ -1,6 +1,9 @@
 Commission Frontend (Provisional)
 
-Repositorio provisional del frontend de Commission App, desplegado en: https://commission-frontend-nine.vercel.app
+Repositorio provisional del frontend de Commission App, desplegado en: https://commission-frontend-nine.vercel.app/login
+
+prueba= danger5@test.com
+pasword=Password123
 
 Tecnologías
 
@@ -140,6 +143,6 @@ console.table(flatParticipants);
 
 Despliegue en Vercel
 
-Este proyecto ya está desplegado en: https://commission-frontend-nine.vercel.app
+Este proyecto ya está desplegado en: https://commission-frontend-nine.vercel.app/login
 
 Para actualizar: git push → Vercel detecta cambios y redeploy automático.

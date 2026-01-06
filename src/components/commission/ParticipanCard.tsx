@@ -15,7 +15,7 @@ export default function ParticipantCard({
 }: ParticipantCardProps) {
   const { id, name, email, level, totalEarned, children = [] } = participant;
 
-  const levelStyles: Record<AffiliateLevel, string> = {
+  const levelStyles: Record<number, string> = {
     1: 'bg-blue-100 text-blue-800',
     2: 'bg-green-100 text-green-800',
     3: 'bg-purple-100 text-purple-800',
@@ -62,14 +62,14 @@ export default function ParticipantCard({
         </div>
 
         {/* Editar */}
-        {onEdit && (
+        {/* {onEdit && (
           <button
             onClick={onEdit}
             className="ml-3 px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700 transition-colors"
           >
             Editar
           </button>
-        )}
+        )} */}
       </div>
 
       {/* Footer */}

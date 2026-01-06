@@ -26,3 +26,9 @@ export interface AuthState {
 
   logout: () => void;
 }
+
+export interface RegisterAffiliatePayload {
+  email: string;
+  password: string;
+  name: string;
+}

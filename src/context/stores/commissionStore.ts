@@ -1,212 +1,189 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { AffiliateLevel, Participant } from '@/types/hirerachy';
 import {
   addParticipant,
   deleteParticipant,
-  fetchCommissionsByLevel,
   updateParticipant,
 } from '@/services/commissionservice';
+import { affiliateTree, getAffiliatesByLeve } from '@/services/affiliate';
 
-import { Participant } from '@/types/hirerachy';
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { affiliateTree } from '@/services/affiliate';
+import { Affiliate } from './affiliateStore';
+import { LevelStats } from '@/types/commission';
 import { create } from 'zustand';
 
 interface CommissionState {
-  // Para jerarquía
   participants: Participant[];
   flatParticipants: Participant[];
-
-  // Para vista por niveles
-  currentLevel: number;
-  levelStats: {
-    [key: number]: {
-      count: number;
-      totalAmount: number;
-      percentage: number;
-      description: string;
-    };
-  };
+  currentLevel: AffiliateLevel;
+  levelStats: Record<number, LevelStats>;
   totalCommissions: number;
   totalEarned: number;
   totalAmount: number;
-
-  // Estado general
   loading: boolean;
   error: string | null;
   selectedParticipant: Participant | null;
 
-  // Actions
   fetchHierarchyData: (userId: string, token: string) => Promise<void>;
-
-  fetchLevelStats: (userId: string, token: string) => Promise<void>;
-  setCurrentLevel: (level: number) => void;
+  fetchAffiliatesByLevel: (
+    token: string,
+    level?: AffiliateLevel
+  ) => Promise<void>;
+  setCurrentLevel: (level: AffiliateLevel) => void;
   selectParticipant: (participant: Participant | null) => void;
-  addNewParticipant: (participantData: any, token: string) => Promise<void>;
+  addNewParticipant: (
+    participantData: Partial<Participant>,
+    token: string
+  ) => Promise<void>;
   updateExistingParticipant: (
     id: string,
-    participantData: any,
+    participantData: Partial<Participant>,
     token: string
   ) => Promise<void>;
   removeParticipant: (id: string, token: string) => Promise<void>;
 }
 
-export const useCommissionStore = create<CommissionState>((set, get) => ({
-  participants: [],
-  flatParticipants: [], // NUEVO
-  currentLevel: 1,
-  levelStats: {},
-  totalCommissions: 0,
-  totalEarned: 0,
-  totalAmount: 0,
-  loading: false,
-  error: null,
-  selectedParticipant: null,
+export const useCommissionStore = create<CommissionState>((set, get) => {
+  // Convierte un Affiliate en Participant
+  const mapAffiliateToParticipant = (
+    affiliate: Affiliate,
+    parentId?: string
+  ): Participant => ({
+    id: affiliate.id,
+    name: affiliate.user?.name ?? '',
+    email: affiliate.user?.email ?? '',
+    level: affiliate.level,
+    totalEarned: Number(affiliate.totalEarned ?? 0),
+    totalCommission: Number(affiliate.commissionRate ?? 0),
+    parentId,
+    children: [],
+    affiliate: {
+      ...affiliate,
+      name: '',
+      email: '',
+    }, // guardamos el objeto original
+  });
 
-  fetchHierarchyData: async (userId: string, token: string) => {
-    set({ loading: true, error: null });
+  // Aplana un árbol de Participants
+  const flattenTree = (root: Participant): Participant[] => {
+    const result: Participant[] = [];
+    const traverse = (node: Participant) => {
+      result.push({ ...node, children: [] });
+      node.children.forEach(traverse);
+    };
+    traverse(root);
+    return result;
+  };
 
-    try {
-      const tree = await affiliateTree(userId, token);
+  // Construye hijos recursivamente
+  const buildChildren = (node: Participant, affiliateNode: Affiliate) => {
+    node.children = (affiliateNode.children ?? []).map((child: Affiliate) => {
+      const childNode = mapAffiliateToParticipant(child, node.id);
+      buildChildren(childNode, child);
+      return childNode;
+    });
+  };
 
-      if (!tree) {
-        set({ participants: [], flatParticipants: [], loading: false });
-        return;
+  return {
+    participants: [],
+    flatParticipants: [],
+    currentLevel: 1,
+    levelStats: {},
+    totalCommissions: 0,
+    totalEarned: 0,
+    totalAmount: 0,
+    loading: false,
+    error: null,
+    selectedParticipant: null,
+
+    fetchHierarchyData: async (userId, token) => {
+      set({ loading: true, error: null });
+      try {
+        const treeData: Affiliate = await affiliateTree(userId, token);
+        if (!treeData) {
+          set({ participants: [], flatParticipants: [], loading: false });
+          return;
+        }
+
+        const rootNode = mapAffiliateToParticipant(treeData);
+        buildChildren(rootNode, treeData);
+        const flatParticipants = flattenTree(rootNode);
+
+        set({ participants: [rootNode], flatParticipants, loading: false });
+      } catch (err: any) {
+        set({ error: err.message ?? 'Error desconocido', loading: false });
       }
+    },
 
-      // 2️⃣ Normalizar árbol en Participant
-      const normalizeNode = (node: any, parentId?: string): Participant => ({
-        id: node.id,
-        name: node.name,
-        email: node.email || '',
-        level: node.level,
-        totalEarned: node.totalEarned ?? 0,
-        totalCommission: node.totalCommission ?? 0,
-        parentId: parentId ?? undefined,
-        children:
-          node.children?.map((child: any) => normalizeNode(child, node.id)) ||
-          [],
-      });
+    fetchAffiliatesByLevel: async (token, level) => {
+      set({ loading: true, error: null });
+      try {
+        const data: Affiliate[] = await getAffiliatesByLeve(token, level);
+        const participants = data.map((a) => mapAffiliateToParticipant(a));
+        set({ participants, flatParticipants: participants, loading: false });
+      } catch (err: any) {
+        set({ error: err.message ?? 'Error desconocido', loading: false });
+      }
+    },
 
-      const rootNode: Participant = normalizeNode(tree);
+    setCurrentLevel: (level) => set({ currentLevel: level }),
 
-      const flatParticipants: Participant[] = [];
-      const traverse = (node: Participant) => {
-        flatParticipants.push({ ...node, children: [] });
-        node.children.forEach(traverse);
-      };
-      traverse(rootNode);
+    selectParticipant: (participant) =>
+      set({ selectedParticipant: participant }),
 
-      // 4️⃣ Guardar en el estado
-      set({
-        participants: [rootNode],
-        flatParticipants,
-        loading: false,
-      });
+    addNewParticipant: async (participantData, token) => {
+      set({ loading: true });
+      try {
+        const newAffiliate = await addParticipant(participantData, token);
+        const mapped = mapAffiliateToParticipant(newAffiliate);
+        set((state) => ({
+          participants: [...state.participants, mapped],
+          flatParticipants: [...state.flatParticipants, mapped],
+          loading: false,
+        }));
+      } catch (err: any) {
+        set({ error: err.message ?? 'Error desconocido', loading: false });
+        throw err;
+      }
+    },
 
-      console.table(
-        flatParticipants.map((p) => ({
-          name: p.name,
-          level: p.level,
-          totalEarned: p.totalEarned,
-          totalCommission: p.totalCommission,
-        }))
-      );
-    } catch (error: any) {
-      console.error('❌ fetchHierarchyData error:', error);
-      set({ error: error.message, loading: false });
-    }
-  },
+    updateExistingParticipant: async (id, participantData, token) => {
+      set({ loading: true });
+      try {
+        const updatedAffiliate = await updateParticipant(
+          id,
+          participantData,
+          token
+        );
+        const updatedParticipant = mapAffiliateToParticipant(updatedAffiliate);
+        set((state) => ({
+          participants: state.participants.map((p) =>
+            p.id === id ? { ...p, ...updatedParticipant } : p
+          ),
+          flatParticipants: state.flatParticipants.map((p) =>
+            p.id === id ? { ...p, ...updatedParticipant } : p
+          ),
+          selectedParticipant: null,
+          loading: false,
+        }));
+      } catch (err: any) {
+        set({ error: err.message ?? 'Error desconocido', loading: false });
+        throw err;
+      }
+    },
 
-  fetchLevelStats: async (userId: string, token: string) => {
-    set({ loading: true, error: null });
-    try {
-      const data = await fetchCommissionsByLevel(userId, token);
-
-      const levelStats = {
-        1: data.byLevel?.level1 || {
-          count: 0,
-          totalAmount: 0,
-          percentage: 0,
-          description: '',
-        },
-        2: data.byLevel?.level2 || {
-          count: 0,
-          totalAmount: 0,
-          percentage: 0,
-          description: '',
-        },
-        3: data.byLevel?.level3 || {
-          count: 0,
-          totalAmount: 0,
-          percentage: 0,
-          description: '',
-        },
-      };
-
-      set({
-        levelStats,
-        totalCommissions: data.totalCommissions || 0,
-        totalAmount: data.totalAmount || 0,
-        loading: false,
-      });
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
-    }
-  },
-
-  setCurrentLevel: (level: number) => {
-    set({ currentLevel: level });
-  },
-
-  selectParticipant: (participant: Participant | null) => {
-    set({ selectedParticipant: participant });
-  },
-
-  addNewParticipant: async (participantData: any, token: string) => {
-    set({ loading: true });
-    try {
-      const newParticipant = await addParticipant(participantData, token);
-      set((state) => ({
-        participants: [...state.participants, newParticipant],
-        loading: false,
-      }));
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
-      throw error;
-    }
-  },
-
-  updateExistingParticipant: async (
-    id: string,
-    participantData: any,
-    token: string
-  ) => {
-    set({ loading: true });
-    try {
-      const updated = await updateParticipant(id, participantData, token);
-      set((state) => ({
-        participants: state.participants.map((p) =>
-          p.id === id ? { ...p, ...updated } : p
-        ),
-        selectedParticipant: null,
-        loading: false,
-      }));
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
-      throw error;
-    }
-  },
-
-  removeParticipant: async (id: string, token: string) => {
-    set({ loading: true });
-    try {
-      await deleteParticipant(id, token);
-      set((state) => ({
-        participants: state.participants.filter((p) => p.id !== id),
-        loading: false,
-      }));
-    } catch (error: any) {
-      set({ error: error.message, loading: false });
-      throw error;
-    }
-  },
-}));
+    removeParticipant: async (id, token) => {
+      set({ loading: true });
+      try {
+        await deleteParticipant(id, token);
+        set((state) => ({
+          participants: state.participants.filter((p) => p.id !== id),
+          flatParticipants: state.flatParticipants.filter((p) => p.id !== id),
+          loading: false,
+        }));
+      } catch (err: any) {
+        set({ error: err.message ?? 'Error desconocido', loading: false });
+        throw err;
+      }
+    },
+  };
+});

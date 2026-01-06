@@ -19,15 +19,10 @@ export async function loginService(email: string, password: string) {
   };
 }
 
+import { RegisterAffiliatePayload } from '@/types/AuthUser';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-export interface RegisterAffiliatePayload {
-  email: string;
-  password: string;
-  name: string;
-}
 
 export async function registerAffiliate(
   data: RegisterAffiliatePayload,

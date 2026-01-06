@@ -29,7 +29,7 @@ export default function HierarchyView({ participants }: HierarchyViewProps) {
             <ParticipantCard
               participant={{
                 ...node,
-                children: [], // No mostrar hijos en la tarjeta
+                children: [],
               }}
               // onEdit={() => {
               //   selectParticipant(node);

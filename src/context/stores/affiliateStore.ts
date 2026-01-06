@@ -3,6 +3,8 @@ import { create } from 'zustand';
 import { updateParticipant } from '@/services/commissionservice';
 
 export interface Affiliate {
+  user: any;
+  children: never[];
   id: string;
   userId: string;
   level: number;
@@ -16,6 +18,10 @@ interface AffiliateState {
   loading: boolean;
   error: string | null;
 
+  /**
+   * Asigna un afiliado padre a un afiliado existente
+   * El backend recalcula nivel y comisión
+   */
   assignParent: (
     affiliateId: string,
     parentId: string,

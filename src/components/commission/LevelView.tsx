@@ -1,37 +1,36 @@
 'use client';
 
+import { useEffect, useMemo } from 'react';
+
 import ParticipantCard from '../commissionComponent/ParticipanCard';
 import { useAuthStore } from '@/context/stores/authStore';
 import { useCommissionStore } from '@/context/stores/commissionStore';
-import { useEffect } from 'react';
 
 export default function LevelView() {
   const {
-    participants,
+    flatParticipants,
     currentLevel,
-    totalEarned,
     levelStats,
-    totalAmount,
     setCurrentLevel,
-    fetchLevelStats,
+    fetchAffiliatesByLevel,
   } = useCommissionStore();
 
-  const { token, userId } = useAuthStore(); // Necesitarás importar useAuthStore
+  const { token } = useAuthStore();
 
-  // Cargar estadísticas por nivel al montar
+  // Cargar afiliados al montar o al cambiar de nivel
   useEffect(() => {
-    if (token && userId) {
-      fetchLevelStats(userId, token);
+    if (token) {
+      fetchAffiliatesByLevel(token, currentLevel as 1 | 2 | 3);
     }
-  }, [token, userId, fetchLevelStats]);
+  }, [token, currentLevel, fetchAffiliatesByLevel]);
 
-  // Filtrar participantes por nivel (de la jerarquía)
-  const levelParticipants = participants.filter(
-    (p) => p.level === currentLevel
+  // Filtrar participantes por nivel usando useMemo para optimización
+  const levelParticipants = useMemo(
+    () => flatParticipants.filter((p) => p.level === currentLevel),
+    [flatParticipants, currentLevel]
   );
 
-  // Usar estadísticas del nivel actual
-  const currentLevelStats = levelStats[currentLevel] || {
+  const stats = levelStats[currentLevel] || {
     count: 0,
     totalAmount: 0,
     percentage: 0,
@@ -42,90 +41,53 @@ export default function LevelView() {
     <div className="space-y-6">
       {/* Selector de nivel */}
       <div className="flex space-x-2">
-        {[1, 2, 3].map((level) => (
+        {[1, 2, 3].map((lvl) => (
           <button
-            key={level}
-            onClick={() => setCurrentLevel(level)}
+            key={lvl}
+            onClick={() => setCurrentLevel(lvl as 1 | 2 | 3)}
             className={`px-4 py-2 rounded transition-colors ${
-              currentLevel === level
+              currentLevel === lvl
                 ? 'bg-blue-600 text-white'
                 : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
             }`}
           >
-            Nivel {level}
-            {levelStats[level] && (
-              <span className="ml-2 text-xs opacity-75">
-                ${levelStats[level].totalAmount.toLocaleString()}
-              </span>
-            )}
+            Nivel {lvl} (${levelStats[lvl]?.totalAmount.toLocaleString() || 0})
           </button>
         ))}
       </div>
 
-      {/* Estadísticas generales */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Resumen General</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <h3 className="text-sm text-gray-500">Comisiones Totales</h3>
-            <p className="text-2xl font-bold">{totalEarned}</p>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Monto Total</h3>
-            <p className="text-2xl font-bold text-green-600">
-              ${totalAmount.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <h3 className="text-sm text-gray-500">Nivel Actual</h3>
-            <p className="text-2xl font-bold">Nivel {currentLevel}</p>
-          </div>
+      {/* Estadísticas del nivel */}
+      <div className="bg-white rounded-lg shadow p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div>
+          <h3 className="text-sm text-gray-500">Participantes</h3>
+          <p className="text-2xl font-bold">{stats.count}</p>
         </div>
-      </div>
-
-      {/* Estadísticas del nivel actual */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg shadow">
-          <h3 className="text-sm text-gray-500">Transacciones</h3>
-          <p className="text-2xl font-bold">{currentLevelStats.count}</p>
-        </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div>
           <h3 className="text-sm text-gray-500">Monto Total</h3>
           <p className="text-2xl font-bold text-green-600">
-            ${currentLevelStats.totalAmount.toLocaleString()}
+            ${stats.totalAmount.toLocaleString()}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div>
           <h3 className="text-sm text-gray-500">Porcentaje</h3>
-          <p className="text-2xl font-bold">{currentLevelStats.percentage}%</p>
+          <p className="text-2xl font-bold">{stats.percentage}%</p>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow">
+        <div>
           <h3 className="text-sm text-gray-500">Descripción</h3>
-          <p className="text-lg">{currentLevelStats.description}</p>
+          <p>{stats.description}</p>
         </div>
       </div>
 
-      {/* Lista de participantes del nivel (de la jerarquía) */}
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">
-            Participantes - Nivel {currentLevel}
-          </h2>
-          <span className="text-gray-500">
-            {levelParticipants.length} participantes en jerarquía
-          </span>
-        </div>
-
+      {/* Lista de participantes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {levelParticipants.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 bg-white rounded-lg shadow">
-            No hay participantes en este nivel de la jerarquía
+          <div className="col-span-full text-center py-8 bg-white rounded-lg shadow text-gray-500">
+            No hay participantes en este nivel
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {levelParticipants.map((participant) => (
-              <ParticipantCard key={participant.id} participant={participant} />
-            ))}
-          </div>
+          levelParticipants.map((p) => (
+            <ParticipantCard key={p.id} participant={p} />
+          ))
         )}
       </div>
     </div>
